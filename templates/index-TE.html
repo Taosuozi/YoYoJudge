@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 视频播放器</title>
+    <style>
+        /* 使整个页面内容占满整个视口 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 视频容器：宽度100%并且撑满整个页面 */
+        .video-container {
+            flex: 1; /* 使视频容器占满剩余空间 */
+            width: 100%;
+        }
+
+        iframe {
+            width: 100%; /* 视频嵌入自适应宽度 */
+            height: 100%; /* 视频高度填充页面 */
+        }
+
+        /* 按钮容器：水平布局并且使按钮宽度充满剩余空间 */
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background-color: #f0f0f0;
+        }
+
+        /* 按钮样式 */
+        .button {
+            background-color: black; /* 按钮颜色改为黑色 */
+            border: 2px solid white; /* 边框改为白色 */
+            padding: 20px 0;
+            cursor: pointer;
+            font-size: 24px;
+            text-align: center;
+            width: 50%; /* 每个按钮宽度占页面的一半 */
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white; /* 按钮文字颜色改为白色 */
+        }
+
+        .active-left {
+            background-color: red;
+            color: white;
+        }
+
+        .active-right {
+            background-color: green;
+            color: white;
+        }
+
+        .flash-blue {
+            background-color: deepskyblue;
+            color: white;
+        }
+
+        .flash-gold {
+            background-color: gold;
+            color: black;
+        }
+
+        .flash-purple {
+            background-color: #f322f3;
+            color: white;
+        }
+
+        .flash-green {
+            background-color: limegreen;
+            color: white;
+        }
+
+        .flash-orange {
+            background-color: orangered;
+            color: white;
+        }
+
+        .number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* "+1" 显示样式 */
+        .plus-one {
+            position: fixed;
+            top: 30%;
+            left: 30%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: limegreen;
+            opacity: 0;
+        }
+        .minus-one {
+            position: fixed;
+            top: 30%;
+            left: 70%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: red;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body tabindex="0">
+
+<!-- 视频容器 -->
+<div class="video-container">
+    <iframe id="youtubeIframe" src="https://www.youtube.com/embed/hwmz6KLe0OU" frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+<!-- 按钮容器 -->
+<div class="buttons">
+    <!-- 右按钮：显示“+” -->
+    <div class="button right-button" id="rightButton" onclick="increaseRightNumber()" tabindex="1">
+        <span>+</span><span id="rightNumber" class="number">0</span>
+    </div>
+
+    <!-- 左按钮：显示“-” -->
+    <div class="button left-button" id="leftButton" onclick="increaseLeftNumber()" tabindex="2">
+        <span>-</span><span id="leftNumber" class="number">0</span>
+    </div>
+</div>
+
+<!-- "+1" 显示元素 -->
+<div id="plusOne" class="plus-one">+1</div>
+<div id="minusOne" class="minus-one">-1</div>
+<script>
+    let leftNumber = 0;
+    let rightNumber = 0;
+    let lastLeftPressTime = 0;
+    let lastPressTime = 0; // 上次按键的时间
+    let pressCount = 0; // 连续按键计数
+    let lastFlashColor = '';  // 记录最后的闪烁颜色
+
+    // 左边按钮减少数字
+    function increaseLeftNumber() {
+        leftNumber++;
+        document.getElementById('leftNumber').innerText = leftNumber;
+    }
+
+    // 右边按钮增加数字
+    function increaseRightNumber() {
+        rightNumber++;
+        document.getElementById('rightNumber').innerText = rightNumber;
+    }
+
+    // 重置数字
+    function resetNumbers() {
+        leftNumber = 0;
+        rightNumber = 0;
+        document.getElementById('leftNumber').innerText = leftNumber;
+        document.getElementById('rightNumber').innerText = rightNumber;
+    }
+
+    // 改变右按钮的闪烁颜色
+    function flashRightButton(count) {
+        const rightButton = document.getElementById('rightButton');
+        if (count === 1) {
+            rightButton.classList.add('flash-green');
+            lastFlashColor = 'green';
+            setTimeout(() => rightButton.classList.remove('flash-green'), 200);
+        } else if (count === 2) {
+            rightButton.classList.add('flash-blue');
+            lastFlashColor = 'deepskyblue';
+            setTimeout(() => rightButton.classList.remove('flash-blue'), 200);
+        } else if (count === 3) {
+            rightButton.classList.add('flash-gold');
+            lastFlashColor = 'gold';
+            setTimeout(() => rightButton.classList.remove('flash-gold'), 200);
+        } else if (count === 4) {
+            rightButton.classList.add('flash-purple');
+            lastFlashColor = '#f322f3';
+            setTimeout(() => rightButton.classList.remove('flash-purple'), 200);
+        } else if (count >= 5) {
+            rightButton.classList.add('flash-orange');
+            lastFlashColor = 'orangered';
+            setTimeout(() => rightButton.classList.remove('flash-orange'), 200);
+        }
+    }
+
+
+    // 按键事件处理
+    document.addEventListener('keydown', function (event) {
+        // 调用 preventDefault 可以防止默认行为（例如浏览器快捷键）
+        event.preventDefault();
+        let currentTime = Date.now();
+        if (event.key === 'n') {  // 按下左键的情况
+            increaseLeftNumber();
+            lastLeftPressTime = currentTime;
+            document.getElementById('leftButton').classList.add('active-left');
+            setTimeout(() => {
+                document.getElementById('leftButton').classList.remove('active-left');
+            }, 100); // 闪烁效果持续时间
+            setTimeout(() => {
+            const minusOneElement = document.getElementById('minusOne');
+            minusOneElement.innerText = `-1`;  // Show "-1"
+            minusOneElement.style.opacity = 1;  // Show the count
+            minusOneElement.style.color = 'red'
+            setTimeout(() => {
+                minusOneElement.style.opacity = 0;  // Fade out after 0.5s
+            }, 500);
+            }, 500);
+        } else if (event.key === 'c') {  // 按下右键的情况
+            increaseRightNumber();
+            if (currentTime - lastPressTime < 500) {  // 如果两次按键在500毫秒内
+                pressCount++;
+            } else {
+                pressCount = 1;  // 重置按键计数
+            }
+            lastPressTime = currentTime;
+            flashRightButton(pressCount);
+
+        } else if (event.key === 'r') {
+            resetNumbers(); // 按下 'r' 键时重置数字
+        }
+    });
+
+    // 强制将焦点保持在页面按钮上
+    function keepFocusOnButton() {
+        document.body.focus();  // 保证页面获取焦点
+    }
+
+    function showTheClick() {
+        const currentTime = Date.now();
+        const plusOneElement = document.getElementById('plusOne');
+        if (currentTime - lastPressTime >= 500 && pressCount !== 0) {
+            plusOneElement.innerText = `+${pressCount}`;  // Show "+pressCount"
+            plusOneElement.style.opacity = 1;  // Show the count
+            plusOneElement.style.color = lastFlashColor === 'green' ? 'limegreen' : lastFlashColor;  // Set color based on last flash
+            plusOneElement.style.fontSize = (48 + (pressCount - 1) * 5) + 'px';
+            setTimeout(() => {
+                plusOneElement.style.opacity = 0;  // Fade out after 0.5s
+            }, 500);
+            pressCount = 0;
+        }
+    }
+
+
+    // 每隔一段时间强制聚焦到按钮上
+    setInterval(keepFocusOnButton, 50);  // 每100ms将焦点强制设置到左按钮
+    setInterval(showTheClick, 1)
+    // 确保页面加载时聚焦
+    document.body.focus();
+
+    // 监听点击视频时，强制将焦点转移到页面元素
+    const iframe = document.getElementById('youtubeIframe');
+    iframe.addEventListener('click', () => {
+        // 视频点击后，手动将焦点转移到页面上
+        document.body.focus();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {  // 检查按键是否为 Enter
+            let confirmJump = confirm("是否跳转到Evals打分？");
+            if (confirmJump) {
+                // 用户选择 "是"，跳转到 index-FE.html
+                window.location.href = '/index-FE.html';
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
